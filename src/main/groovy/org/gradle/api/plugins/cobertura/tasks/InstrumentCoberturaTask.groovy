@@ -3,6 +3,7 @@ package org.gradle.api.plugins.cobertura.tasks
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.*
 import org.gradle.api.internal.project.IsolatedAntBuilder
+import org.gradle.api.tasks.util.PatternSet
 
 class InstrumentCoberturaTask extends SourceTask {
 
@@ -24,7 +25,6 @@ class InstrumentCoberturaTask extends SourceTask {
         ant.execute {
             taskdef(name: 'cobertura-instrument', classname: "net.sourceforge.cobertura.ant.InstrumentTask")
             'cobertura-instrument'(toDir: getClassesDir(), datafile: getSerFile()) {
-                getIgnores().each { ignore(regex: it) }
                 getSourceClassFiles().addToAntBuilder(delegate, "fileset", FileCollection.AntType.FileSet)
             }
         }
@@ -33,7 +33,11 @@ class InstrumentCoberturaTask extends SourceTask {
     }
 
     protected FileCollection getSourceClassFiles() {
-        getSource().filter { File it -> it.name.endsWith(".class") }
+        getIgnores().each { println "Excluding $it from Cobertura instrumentation." }
+        PatternSet pattern = new PatternSet()
+        pattern.exclude( getIgnores() )
+        pattern.include ( '**/*.class' )
+        return getSource().matching( pattern )
     }
 
     FileCollection getInstrumentedClassFiles() {

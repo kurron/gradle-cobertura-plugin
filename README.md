@@ -25,9 +25,9 @@ cobertura {
 ## Configuration
 
 * _(Optional)_ format = 'html' (default) or 'xml'
-* _(Optional)_ includes = List<String> glob paths to be reported on
-* _(Optional)_ excludes = List<String> glob paths to exclude from reporting
-* _(Optional)_ ignores = List<String> Ant patterns of classes to exclude from instrumentation
+* _(Optional)_ includes = glob paths to be reported on
+* _(Optional)_ excludes = glob paths to exclude from reporting
+* _(Optional)_ ignores = Ant patterns of classes to exclude from instrumentation
 
 ### With `java` plugin
 
