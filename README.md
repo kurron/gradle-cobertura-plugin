@@ -18,6 +18,7 @@ apply plugin: 'cobertura'
 cobertura {
     format = 'xml'
     includes = ['**/*.java', '**/*.groovy']
+    ignores = ['**/org/kurron/errors/*.class', '**/org/kurron/sample/TooSmallToTest.class']
 }
 ```
 
@@ -26,7 +27,7 @@ cobertura {
 * _(Optional)_ format = 'html' (default) or 'xml'
 * _(Optional)_ includes = List<String> glob paths to be reported on
 * _(Optional)_ excludes = List<String> glob paths to exclude from reporting
-* _(Optional)_ ignores = List<String> regexes of classes to exclude from instrumentation
+* _(Optional)_ ignores = List<String> Ant patterns of classes to exclude from instrumentation
 
 ### With `java` plugin
 
