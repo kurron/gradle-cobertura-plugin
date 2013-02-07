@@ -1,14 +1,17 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'idea'
 
-defaultTasks 'clean', 'build', 'install'
+defaultTasks 'clean', 'build'
 
-version = '1.0'
+version = '1.0.2-SNAPSHOT'
 group = 'org.kurron'
+
+
 ext.archivesBaseName = 'gradle-cobertura-plugin'
-ext.isSnapshot = version.endsWith("-SNAPSHOT")
+ext.isSnapshot = version.endsWith('-SNAPSHOT')
+ext.publicationUrl = "http://192.168.254.81:81/artifactory/mods-release-local"
+ext.publicationUsername = 'SVNBuild'
+ext.publicationPassword = 'Snoopy*09'
 
 repositories {
     mavenCentral()
@@ -24,24 +27,29 @@ dependencies {
     }
 }
 
-idea.module {
-    ext.gradleCacheVariable = 'GRADLE_CACHE'
-    downloadJavadoc = true
-    ext.downloadSource = true
-    outputDir = file("intellij/out")
-    testOutputDir = file("intellij/testOut")
-}
-
-idea.project.ipr.withXml { provider ->
-    def node = provider.asNode()
-    // Use git
-    def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
-    vcsConfig.mapping[0].'@vcs' = 'Git'
-
-    // Set gradle home
-    def gradleSettings = node.appendNode('component', [name: 'GradleSettings'])
-    gradleSettings.appendNode('option', [name: 'SDK_HOME', value: gradle.gradleHomeDir.absolutePath])
-}
+    println "version = $version"
+    if ( isSnapshot )
+    {
+        logger.quiet 'Snapshot revision detected. Configuring for local installation.'
+        project.defaultTasks.add( 'install' )
+    }
+    else
+    {
+        logger.quiet 'Release revision detected. Configuring for publication.'
+        uploadArchives {
+            repositories {
+                maven {
+                    description 'Sandbox area of the repository to test publishing to'
+                    url = publicationUrl
+                    credentials {
+                        username = publicationUsername
+                        password = publicationPassword
+                }
+            }
+        }
+    }
+    defaultTasks.add( 'uploadArchives' )
+    }
 
 task makeDirs(description:'make all dirs for project setup') << {
     def sources = [sourceSets.main, sourceSets.test]
@@ -71,66 +79,3 @@ artifacts {
     archives groovydocJar, sourceJar
 }
 
-signing {
-    sign configurations.archives
-}
-
-// Only *require* signing if we are uploading a non snapshot version
-gradle.taskGraph.whenReady { taskGraph ->
-    tasks.withType(org.gradle.plugins.signing.Sign).all {
-        required = taskGraph.hasTask(":uploadArchives") && !isSnapshot
-    }
-}
-
-install.repositories.mavenInstaller {
-    pom.project(pomConfiguration)
-    if (signing.signatory) {
-        beforeDeployment { signing.signPom(it) }
-    }
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        if (signing.signatory) {
-            beforeDeployment { signPom(it) }
-        }
-        name = 'mavenCentralReleaseDeployer'
-        repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-            authentication(userName: System.properties['mavenCentralUsername'], password: System.properties['mavenCentralPassword'])
-            releases(updatePolicy: 'always')
-            snapshots(updatePolicy: 'always')
-        }
-        pom.project(pomConfiguration)
-    }
-}
-
-/**
- * Create POM config and return for use by other tasks.
- */
-def getPomConfiguration() {
-    return {
-        name 'Gradle Cobertura Plugin'
-        packaging 'jar'
-        description 'Gradle plugin for using Cobertura code coverage'
-        url 'https://github.com/Mapvine/gradle-cobertura-plugin'
-        licenses {
-            license {
-                name 'The Apache Software License, Version 2.0'
-                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                distribution 'repo'
-            }
-        }
-        developers {
-            developer {
-                id 'mapvine'
-                name 'MapVine'
-                email 'dev@mapvine.com'
-            }
-        }
-        scm {
-            connection 'scm:https://mapvine-dev@github.com/Mapvine/gradle-cobertura-plugin'
-            developerConnection 'scm:git@github.com:Mapvine/gradle-cobertura-plugin.git'
-            url 'https://github.com/Mapvine/gradle-cobertura-plugin'
-        }
-    }
-}
