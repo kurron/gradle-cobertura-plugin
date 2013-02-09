@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
 
-defaultTasks 'clean', 'build'
+defaultTasks 'clean', 'collectJars', 'build'
 
 group = 'org.kurron'
 
@@ -84,6 +84,11 @@ task groovydocJar(type: Jar) {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.4'
+}
+
+task collectJars(type: Copy) {
+    into "$rootDir/build/dependencies"
+    from( [configurations.testRuntime] )
 }
 
 artifacts {
