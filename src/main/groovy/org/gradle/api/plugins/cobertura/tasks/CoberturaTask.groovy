@@ -25,7 +25,12 @@ class CoberturaTask extends SourceTask {
             def ant = getServices().get(IsolatedAntBuilder).withClasspath(getCoberturaClasspath())
             ant.execute {
                 taskdef(name: 'cobertura-report', classname: "net.sourceforge.cobertura.ant.ReportTask")
-                'cobertura-report'(format: getFormat(), destdir: getReportDir(), datafile: getSerFile()) {
+                // Run the HTML version of the report
+                'cobertura-report'(format: 'html', destdir: getReportDir(), datafile: getSerFile()) {
+                    getSource().addToAntBuilder(delegate, "fileset", FileCollection.AntType.FileSet)
+                }
+                // Run the XML version of the report
+                'cobertura-report'(format: 'xml', destdir: getReportDir(), datafile: getSerFile()) {
                     getSource().addToAntBuilder(delegate, "fileset", FileCollection.AntType.FileSet)
                 }
             }
