@@ -35,7 +35,7 @@ class CoberturaTask extends SourceTask {
                 }
             }
         } else {
-            logger.warn 'Cobertura cannot run becuase no source directories were found.'
+            logger.warn 'Cobertura cannot run because no source directories were found.'
         }
     }
 }
